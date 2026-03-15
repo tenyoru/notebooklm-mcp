@@ -12,13 +12,45 @@
  * Based on the Python implementation from shared_context_manager.py
  */
 
-import type { BrowserContext } from "patchright";
-import { chromium } from "patchright";
+import type { BrowserContext, BrowserType } from "patchright";
+import { chromium, firefox } from "patchright";
 import { CONFIG } from "../config.js";
 import { log } from "../utils/logger.js";
 import { AuthManager } from "../auth/auth-manager.js";
 import fs from "fs";
 import path from "path";
+
+/**
+ * Get browser type based on config
+ */
+function getBrowserType(): BrowserType {
+  switch (CONFIG.browserType) {
+    case "firefox":
+      return firefox;
+    case "chromium":
+    case "chrome":
+    case "zen":
+    default:
+      return chromium;
+  }
+}
+
+/**
+ * Get browser channel based on config
+ */
+function getBrowserChannel(): "chrome" | "msedge" | undefined {
+  switch (CONFIG.browserType) {
+    case "chrome":
+      return "chrome";
+    case "chromium":
+    case "firefox":
+      return undefined; // Use default
+    case "zen":
+      return undefined; // Zen doesn't use channel, uses executablePath
+    default:
+      return "chrome";
+  }
+}
 
 /**
  * Shared Context Manager
@@ -152,9 +184,11 @@ export class SharedContextManager {
 
     // Build launch options for persistent context
     // NOTE: userDataDir is passed as first parameter, NOT in options!
-    const launchOptions = {
+    const browserChannel = getBrowserChannel();
+    const launchOptions: any = {
       headless: shouldBeHeadless,
-      channel: "chrome" as const,
+      ...(browserChannel && { channel: browserChannel }),
+      ...(CONFIG.browserExecutablePath && { executablePath: CONFIG.browserExecutablePath }),
       viewport: CONFIG.viewport,
       locale: "en-US",
       timezoneId: "Europe/Berlin",
@@ -173,17 +207,20 @@ export class SharedContextManager {
       ],
     };
 
-    // 🔥 CRITICAL: launchPersistentContext creates/loads Chrome profile
+    // 🔥 CRITICAL: launchPersistentContext creates/loads browser profile
     // Strategy handling for concurrent instances
     const baseProfile = CONFIG.chromeProfileDir;
     const strategy = CONFIG.profileStrategy;
+    const browserType = getBrowserType();
+    const browserName = CONFIG.browserType.toUpperCase();
+    
     const tryLaunch = async (userDataDir: string) => {
-      log.info("  🚀 Launching persistent Chrome context...");
+      log.info(`  🚀 Launching persistent ${browserName} context...`);
       log.dim(`  📍 Profile location: ${userDataDir}`);
       if (statePath) {
         log.info(`  📄 Loading auth state: ${statePath}`);
       }
-      return chromium.launchPersistentContext(userDataDir, launchOptions);
+      return browserType.launchPersistentContext(userDataDir, launchOptions);
     };
 
     try {
@@ -204,13 +241,13 @@ export class SharedContextManager {
       if (strategy === "single" || !isSingleton) {
         // hard fail
         if (isSingleton && strategy === "single") {
-          log.error("❌ Chrome profile already in use and strategy=single. Close other instance or set NOTEBOOK_PROFILE_STRATEGY=auto/isolated.");
+          log.error(`❌ ${browserName} profile already in use and strategy=single. Close other instance or set NOTEBOOK_PROFILE_STRATEGY=auto/isolated.`);
         }
         throw e;
       }
 
       // auto strategy with lock → fall back to isolated instance dir
-      log.warning("⚠️  Base Chrome profile in use by another process. Falling back to isolated per-instance profile...");
+      log.warning(`⚠️  Base ${browserName} profile in use by another process. Falling back to isolated per-instance profile...`);
       const isolatedDir = await this.prepareIsolatedProfileDir(baseProfile);
       this.globalContext = await tryLaunch(isolatedDir);
       this.currentProfileDir = isolatedDir;
@@ -244,7 +281,8 @@ export class SharedContextManager {
 
     log.success("✅ Persistent context ready!");
     log.dim(`  Context ID: ${this.getContextId()}`);
-    log.dim(`  Chrome Profile: ${CONFIG.chromeProfileDir}`);
+    log.dim(`  Browser: ${browserName}`);
+    log.dim(`  Profile: ${CONFIG.chromeProfileDir}`);
     log.success("  🎯 Fingerprint: PERSISTENT (same across restarts!)");
   }
 
@@ -257,7 +295,7 @@ export class SharedContextManager {
   async closeContext(): Promise<void> {
     if (this.globalContext) {
       log.warning("🛑 Closing persistent context...");
-      log.info("  💾 Chrome is saving profile to disk...");
+      log.info(`  💾 ${CONFIG.browserType.toUpperCase()} is saving profile to disk...`);
       try {
         await this.globalContext.close();
         this.globalContext = null;
@@ -294,7 +332,7 @@ export class SharedContextManager {
     try {
       fs.mkdirSync(dir, { recursive: true });
       if (CONFIG.cloneProfileOnIsolated && fs.existsSync(baseProfile)) {
-        log.info("  🧬 Cloning base Chrome profile into isolated instance (may take time)...");
+        log.info(`  🧬 Cloning base ${CONFIG.browserType.toUpperCase()} profile into isolated instance (may take time)...`);
         // Best-effort clone without locks
         await (fs.promises as any).cp(baseProfile, dir, {
           recursive: true,
@@ -307,7 +345,7 @@ export class SharedContextManager {
         } as any);
         log.success("  ✅ Clone complete");
       } else {
-        log.info("  🧪 Using fresh isolated Chrome profile (no clone)");
+        log.info(`  🧪 Using fresh isolated ${CONFIG.browserType.toUpperCase()} profile (no clone)`);
       }
     } catch (err) {
       log.warning(`  ⚠️  Could not prepare isolated profile: ${err}`);

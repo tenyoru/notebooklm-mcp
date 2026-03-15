@@ -32,6 +32,8 @@ export interface Config {
   notebookUrl: string;
 
   // Browser Settings
+  browserType: "chrome" | "chromium" | "firefox" | "zen";
+  browserExecutablePath: string;
   headless: boolean;
   browserTimeout: number;
   viewport: { width: number; height: number };
@@ -86,6 +88,8 @@ const DEFAULTS: Config = {
   notebookUrl: "",
 
   // Browser Settings
+  browserType: "chrome",
+  browserExecutablePath: "",
   headless: true,
   browserTimeout: 30000,
   viewport: { width: 1024, height: 768 },
@@ -169,6 +173,8 @@ function applyEnvOverrides(config: Config): Config {
     ...config,
     // Override with env vars if present
     notebookUrl: process.env.NOTEBOOK_URL || config.notebookUrl,
+    browserType: (process.env.BROWSER_TYPE as any) || config.browserType,
+    browserExecutablePath: process.env.BROWSER_EXECUTABLE_PATH || config.browserExecutablePath,
     headless: parseBoolean(process.env.HEADLESS, config.headless),
     browserTimeout: parseInteger(process.env.BROWSER_TIMEOUT, config.browserTimeout),
     maxSessions: parseInteger(process.env.MAX_SESSIONS, config.maxSessions),

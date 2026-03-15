@@ -912,7 +912,12 @@ export class AuthManager {
    *                         If not provided, defaults to true (visible) for setup
    */
   async performSetup(sendProgress?: ProgressCallback, overrideHeadless?: boolean): Promise<boolean> {
-    const { chromium } = await import("patchright");
+    const { chromium, firefox } = await import("patchright");
+
+    // Get browser type based on config
+    const browserType = CONFIG.browserType === "firefox" ? firefox : chromium;
+    const browserChannel = CONFIG.browserType === "chrome" ? "chrome" : undefined;
+    const browserName = CONFIG.browserType.toUpperCase();
 
     // Determine headless mode: override or default to true (visible for setup)
     // overrideHeadless contains show_browser value (true = show, false = hide)
@@ -924,27 +929,30 @@ export class AuthManager {
       await sendProgress?.("Clearing old authentication data...", 1, 10);
       await this.clearAllAuthData();
 
-      log.info("🚀 Launching persistent browser for interactive setup...");
+      log.info(`🚀 Launching persistent ${browserName} for interactive setup...`);
       log.info(`  📍 Profile: ${CONFIG.chromeProfileDir}`);
       await sendProgress?.("Launching persistent browser...", 2, 10);
 
       // ✅ CRITICAL FIX: Use launchPersistentContext (same as runtime!)
       // This ensures session cookies persist correctly
-      const context = await chromium.launchPersistentContext(
+      const launchOptions: any = {
+        headless: !shouldShowBrowser, // Use override or default to visible for setup
+        ...(browserChannel && { channel: browserChannel }),
+        ...(CONFIG.browserExecutablePath && { executablePath: CONFIG.browserExecutablePath }),
+        viewport: CONFIG.viewport,
+        locale: "en-US",
+        timezoneId: "Europe/Berlin",
+        args: [
+          "--disable-blink-features=AutomationControlled",
+          "--disable-dev-shm-usage",
+          "--no-first-run",
+          "--no-default-browser-check",
+        ],
+      };
+
+      const context = await browserType.launchPersistentContext(
         CONFIG.chromeProfileDir,
-        {
-          headless: !shouldShowBrowser, // Use override or default to visible for setup
-          channel: "chrome" as const,
-          viewport: CONFIG.viewport,
-          locale: "en-US",
-          timezoneId: "Europe/Berlin",
-          args: [
-            "--disable-blink-features=AutomationControlled",
-            "--disable-dev-shm-usage",
-            "--no-first-run",
-            "--no-default-browser-check",
-          ],
-        }
+        launchOptions
       );
 
       // Get or create a page
