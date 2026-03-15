@@ -941,7 +941,7 @@ export class AuthManager {
         ...(CONFIG.browserExecutablePath && { executablePath: CONFIG.browserExecutablePath }),
         viewport: CONFIG.viewport,
         locale: "en-US",
-        timezoneId: "Europe/Berlin",
+        timezoneId: "Europe/Brussels",
         args: [
           "--disable-blink-features=AutomationControlled",
           "--disable-dev-shm-usage",

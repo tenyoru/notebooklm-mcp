@@ -191,7 +191,7 @@ export class SharedContextManager {
       ...(CONFIG.browserExecutablePath && { executablePath: CONFIG.browserExecutablePath }),
       viewport: CONFIG.viewport,
       locale: "en-US",
-      timezoneId: "Europe/Berlin",
+      timezoneId: "Europe/Brussels",
       // ✅ CRITICAL FIX: Pass storageState directly at launch!
       // This is the PROPER way to handle session cookies (Playwright bug workaround)
       // Benefits:
