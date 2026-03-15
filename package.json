@@ -1,7 +1,7 @@
 {
   "name": "notebooklm-mcp",
-  "version": "1.2.1",
-  "description": "MCP server for NotebookLM API with session support and human-like behavior",
+  "version": "1.2.2",
+  "description": "MCP server for NotebookLM API with multi-browser support (Chrome, Chromium, Firefox, Zen)",
   "type": "module",
   "bin": {
     "notebooklm-mcp": "dist/index.js"
@@ -25,11 +25,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PleasePrompto/notebooklm-mcp.git"
+    "url": "git+https://github.com/tenyoru/notebooklm-mcp.git"
   },
-  "homepage": "https://github.com/PleasePrompto/notebooklm-mcp#readme",
+  "homepage": "https://github.com/tenyoru/notebooklm-mcp#readme",
   "bugs": {
-    "url": "https://github.com/PleasePrompto/notebooklm-mcp/issues"
+    "url": "https://github.com/tenyoru/notebooklm-mcp/issues"
   },
   "files": [
     "dist",

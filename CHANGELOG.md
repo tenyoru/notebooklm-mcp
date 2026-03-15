@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-03-15
+
+### Added
+- **Multi-Browser Support** - No longer limited to Chrome!
+  - Support for Chrome, Chromium, Firefox, and Zen Browser
+  - New environment variables: `BROWSER_TYPE` and `BROWSER_EXECUTABLE_PATH`
+  - Automatic browser detection and configuration
+  - Comprehensive browser configuration documentation in `docs/BROWSER_CONFIGURATION.md`
+  - Examples for all major platforms (Linux, macOS, Windows)
+
+### Changed
+- **Timezone Update** - Changed default timezone from `Europe/Berlin` to `Europe/Brussels`
+- **Browser Launch Logic** - Refactored to support multiple browser types dynamically
+  - New helper functions: `getBrowserType()` and `getBrowserChannel()`
+  - Updated `SharedContextManager` for multi-browser context creation
+  - Updated `AuthManager` for multi-browser authentication
+
+### Technical Details
+- Browser type can be set via `BROWSER_TYPE` env var (chrome/chromium/firefox/zen)
+- Custom browser paths supported via `BROWSER_EXECUTABLE_PATH`
+- Full backwards compatibility - defaults to Chrome if not configured
+- All browsers share the same profile structure for consistency
+
 ## [1.2.0] - 2025-11-21
 
 ### Added
