@@ -185,6 +185,7 @@ export class SharedContextManager {
     // Build launch options for persistent context
     // NOTE: userDataDir is passed as first parameter, NOT in options!
     const browserChannel = getBrowserChannel();
+    const isFirefoxBased = CONFIG.browserType === "firefox" || CONFIG.browserType === "zen";
     const launchOptions: any = {
       headless: shouldBeHeadless,
       ...(browserChannel && { channel: browserChannel }),
@@ -199,7 +200,11 @@ export class SharedContextManager {
       // - No need for addCookies() workarounds
       // - Chrome loads everything automatically
       ...(statePath && { storageState: statePath }),
-      args: [
+      // Browser-specific args (Chromium flags don't work with Firefox/Zen)
+      args: isFirefoxBased ? [
+        // Firefox-compatible flags
+      ] : [
+        // Chromium-only flags
         "--disable-blink-features=AutomationControlled",
         "--disable-dev-shm-usage",
         "--no-first-run",

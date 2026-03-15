@@ -943,7 +943,11 @@ export class AuthManager {
         viewport: CONFIG.viewport,
         locale: "en-US",
         timezoneId: "Europe/Brussels",
-        args: [
+        // Browser-specific args (Chromium flags don't work with Firefox)
+        args: isFirefoxBased ? [
+          // Firefox-compatible flags
+        ] : [
+          // Chromium-only flags
           "--disable-blink-features=AutomationControlled",
           "--disable-dev-shm-usage",
           "--no-first-run",
