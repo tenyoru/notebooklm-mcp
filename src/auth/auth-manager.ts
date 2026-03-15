@@ -915,7 +915,8 @@ export class AuthManager {
     const { chromium, firefox } = await import("patchright");
 
     // Get browser type based on config
-    const browserType = CONFIG.browserType === "firefox" ? firefox : chromium;
+    const isFirefoxBased = CONFIG.browserType === "firefox" || CONFIG.browserType === "zen";
+    const browserType = isFirefoxBased ? firefox : chromium;
     const browserChannel = CONFIG.browserType === "chrome" ? "chrome" : undefined;
     const browserName = CONFIG.browserType.toUpperCase();
 

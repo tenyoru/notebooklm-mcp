@@ -26,10 +26,10 @@ import path from "path";
 function getBrowserType(): BrowserType {
   switch (CONFIG.browserType) {
     case "firefox":
+    case "zen":  // Zen Browser is Firefox-based
       return firefox;
     case "chromium":
     case "chrome":
-    case "zen":
     default:
       return chromium;
   }
